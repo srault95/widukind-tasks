@@ -1,0 +1,9 @@
+decouple
+https://github.com/Widukind/pysdmx/tarball/master
+https://github.com/Widukind/dlstats/tarball/master
+#https://github.com/srault95/dlstats/archive/refactoring_fetchers_package.zip
+#https://github.com/Widukind/dlstats/archive/7b4c8827b9b4f2ee00e307942455163ce6faec4e.zip
+celery==3.1.19
+#flower==0.8.3
+redis
+#simplejson
