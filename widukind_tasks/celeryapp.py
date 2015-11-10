@@ -113,8 +113,8 @@ def main():
     try:
         #app.worker_main(argv=None)
         mongo_client = utils.get_mongo_client()
-        db = client.get_default_database()
-        task_locker = MongoLock(client=client, db=db.name)
+        db = mongo_client.get_default_database()
+        task_locker = MongoLock(client=mongo_client, db=db.name)
         app.start(argv=None)
     except KeyboardInterrupt:
         pass
