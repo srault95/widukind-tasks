@@ -1,21 +1,15 @@
 # -*- coding: utf-8 -*-
 
-#from pymongo import MongoClient
-#from elasticsearch import Elasticsearch
-
-from dlstats import configuration
 from dlstats.fetchers import FETCHERS, FETCHERS_DATASETS
+from widukind_tasks import utils
 
 def run_fetcher(fetcher_name=None, dataset_code=None):
     """Run complete fetcher or one dataset only
-    
-    TODO: mongolock ici ou dans la tâche appelante ?
-    
     """
-    #client = MongoClient(**configuration['MongoDB'])
-    #db = client.get_default_database()
     
-    fetcher = FETCHERS[fetcher_name]()#db=db)
+    db = utils.get_mongo_db()
+    es_client = utils.get_es_client()
+    fetcher = FETCHERS[fetcher_name](db=db, es_client=es_client)
     fetcher.provider.update_database()
     fetcher.upsert_categories()
     
