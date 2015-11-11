@@ -1,0 +1,8 @@
+
+### Common ###
+WIDUKIND_MONGODB_URL=mongodb://mongodb/widukind
+WIDUKIND_ES_URL=http://elasticsearch:9200
+
+### widukind-tasks
+WIDUKIND_CELERY_BROKER=redis://redis:6379/0
+WIDUKIND_CELERY_MODE=prod

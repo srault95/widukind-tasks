@@ -1,0 +1,20 @@
+mongodb:
+  image: mongo:2.4
+  command: mongod --bind_ip 0.0.0.0 --smallfiles --noauth --directoryperdb
+
+redis:
+  image: redis:latest
+  command: redis-server --appendonly yes
+
+search:
+  image: elasticsearch:1.6.2
+
+tasks:
+  build: .
+  user: user
+  env_file:
+    - ./docker_environ
+  links:
+    - redis:redis
+    - mongodb:mongodb
+    - search:elasticsearch  
