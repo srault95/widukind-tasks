@@ -26,7 +26,7 @@ RUN git clone https://github.com/Widukind/dlstats.git \
 
 RUN git clone https://github.com/srault95/widukind-tasks.git \
     && cd widukind-tasks \
-    && pip install -r requirements.txt \
+    && pip install -r requirements-docker.txt \
     && pip install -e .
 
 USER user
