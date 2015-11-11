@@ -11,9 +11,10 @@ ENV PATH /opt/conda/bin:${PATH}
 RUN apt-get update -y
 
 RUN DEBIAN_FRONTEND=noninteractive \
-    && wget --quiet https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh \
-    && /bin/bash /Miniconda3-latest-Linux-x86_64.sh -b -p /opt/conda \
-    && conda install -y pandas lxml numpy
+    && wget -O /tmp/miniconda3.sh --quiet https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh \
+    && /bin/bash /tmp/miniconda3.sh -b -p /opt/conda \
+    && conda install -y pandas lxml numpy \
+    && rm -f /tmp/miniconda3.sh
 
 RUN git clone https://github.com/Widukind/pysdmx.git \
     && cd pysdmx \
