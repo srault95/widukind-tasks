@@ -14,67 +14,55 @@ logger = get_task_logger(__name__)
 
 CELERY_MODE = env_config('WIDUKIND_CELERY_MODE', 'prod')
 
-#'mongodb://mongodb/widukind?replicaSet=widukind'
-#CELERY_BROKER = env_config('CELERY_BROKER', 'mongodb://localhost/widukind')
-CELERY_BROKER = env_config('WIDUKIND_CELERY_BROKER', 'redis://localhost:6379/0')
-
-#print("__main__ : ", __name__)#widukind_tasks.celeryapp
 app = Celery()
 
 task_locker = None
 
 class Config:
-    BROKER_URL = CELERY_BROKER
+    BROKER_URL = env_config('WIDUKIND_CELERY_BROKER', 'redis://localhost:6379/0')
+    #CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+    BROKER_TRANSPORT_OPTIONS = {
+        'fanout_prefix': True,
+        'fanout_patterns': True,
+    }
+    #BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600}  # 1 hour.
     CELERY_ENABLE_UTC = True
     CELERY_TIMEZONE = 'UTC'
-    #CELERY_MONGODB_BACKEND_SETTINGS = {
-    #    'taskmeta_collection': 'celery_tasks', 
-    #}    
     CELERY_IGNORE_RESULT = True
     CELERY_RESULT_PERSISTENT = False
     CELERY_DISABLE_RATE_LIMITS = True
+    #TODO: msgpack
+    CELERY_ACCEPT_CONTENT = ['pickle', 'json']
+    #CELERY_TASK_SERIALIZER = 'json'
+    #CELERY_RESULT_SERIALIZER = 'json'
+    #CELERYD_HIJACK_ROOT_LOGGER = False
     
 class ProdConfig(Config):
     pass    
 
 class DevConfig(Config):
-    #CELERYD_CONCURRENCY = 1
+    CELERYD_CONCURRENCY = 1
     #CELERYD_PREFETCH_MULTIPLIER = 1
     CELERY_SEND_TASK_ERROR_EMAILS = False
     CELERYD_TASK_LOG_FORMAT = '[%(asctime)s: %(levelname)s/%(processName)s][%(task_name)s(%(task_id)s)] %(message)s'
     #CELERY_REDIRECT_STDOUTS = True
     CELERY_REDIRECT_STDOUTS_LEVEL = 'DEBUG'
-    
     #CELERY_REDIS_MAX_CONNECTIONS
 
+class TestConfig(Config):
+    pass
+
+
 if CELERY_MODE == "dev":
+    app.config_from_object(DevConfig)
+elif CELERY_MODE == "testing":
     app.config_from_object(DevConfig)
 else:
     app.config_from_object(ProdConfig)    
 
 """
-> Collections créés - sans execution de task
-messages
-messages.broadcast
-messages.routing
-"""
+TODO: BROKER_FAILOVER_STRATEGY
 
-"""
-app.conf.CELERY_MONGODB_BACKEND_SETTINGS = {
-    #'database': "widukind", 
-    'taskmeta_collection': 'celery_tasks', 
-    #'options': {'tz_aware': True}
-}
-
-app.conf.CELERY_IGNORE_RESULT = True
-#app.conf.CELERY_RESULT_PERSISTENT = False
-app.conf.CELERY_DISABLE_RATE_LIMITS = True
-app.conf.CELERY_TIMEZONE = 'UTC'
-app.conf.CELERY_ENABLE_UTC = True
-"""
-
-"""
-CELERY_TASK_RESULT_EXPIRES
 #CELERYD_TASK_SOFT_TIME_LIMIT
 #CELERY_ENABLE_REMOTE_CONTROL
 
@@ -94,7 +82,7 @@ def fetcher_run_task(fetcher_name=None, dataset_code=None):
     try:
         #expire 10 minutes - timeout = 5mn
         #TODO: voir effet du timeout
-        key = md5("%s.%s" % (fetcher_name, dataset_code)).hexdigest()
+        key = md5(("%s.%s" % (fetcher_name, dataset_code)).encode('utf-8')).hexdigest()
         with task_locker(key, 'fetcher.run', expire=600, timeout=300):
             return run_fetcher(fetcher_name=fetcher_name, dataset_code=dataset_code)
         

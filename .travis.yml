@@ -1,0 +1,42 @@
+sudo: required
+
+language: python
+
+python:
+  - "3.4"
+
+services:
+  - docker
+
+cache:
+  - apt
+  
+env:
+  - REDIS_IMAGE=redis:3 MONGO_IMAGE=mongo:2.4 ES_IMAGE=elasticsearch:1.6.2 DOCKER_OPTIONS="-e WIDUKIND_CELERY_MODE=testing -e WIDUKIND_CELERY_BROKER=redis://redis:6379/0 -e WIDUKIND_MONGODB_NAME=widukind_test -e WIDUKIND_MONGODB_URL=mongodb://mongodb/widukind_test -e WIDUKIND_ES_URL=http://elasticsearch:9200 -e WIDUKIND_ES_INDEX=widukind_test --link=mongodb:mongodb --link=elasticsearch:elasticsearch --link=redis:redis --rm"
+
+before_install:
+  - docker pull $MONGO_IMAGE
+  - docker pull $ES_IMAGE
+  - docker pull $REDIS_IMAGE
+  - docker run -d --name=mongodb $MONGO_IMAGE mongod --smallfiles --noauth --directoryperdb 
+  - docker run -d --name=elasticsearch $ES_IMAGE
+  - docker run -d --name=redis $REDIS_IMAGE redis-server --appendonly yes  
+  - docker build -t widukind/tasks .
+ 
+-install:
+  - pip install coveralls
+ 
+before_script:
+  - sleep 15
+  - env
+  - docker run $DOCKER_OPTIONS --entrypoint=pip widukind/tasks freeze
+
+script:
+  - docker run $DOCKER_OPTIONS widukind/tasks --help
+  
+after_script: coveralls --verbose
+
+notifications:
+  email: true
+  on_success: always
+  on_failure: always
